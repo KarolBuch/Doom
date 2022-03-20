@@ -22,14 +22,17 @@ struct FEnemyFlipbooks
 {
 	GENERATED_BODY()
 
-		UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		class UPaperFlipbook* Idle{ nullptr };
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		class UPaperFlipbook* Walking{ nullptr };
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		class UPaperFlipbook* Shot{ nullptr };
+		class UPaperFlipbook* dying{ nullptr };
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		class UPaperFlipbook* HideWeapon{ nullptr };
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		class UPaperFlipbook* Attack{ nullptr };
+
 
 };
 
@@ -57,14 +60,14 @@ public:
 
 	AActor* Parent = GetOwner();
 
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+
 	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 	void RotateActor(FVector LookAtTarget);
-
-	void ChangeFlipbook(FRotator PoseToTarget);
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "AnimationDestructor")
 		EEnemyDestructor CurrentAnimationWeapon;
@@ -74,8 +77,28 @@ protected:
 
 private:
 
+	//Combat
+	float RotateRange = 3000.f;
+	float AttackRange = 280.f;
+	UPROPERTY(EditDefaultsOnly)
+	float MaxHealth = 100;
+	UPROPERTY(EditDefaultsOnly)
+	float Health;
+	void DeadAnimation();
+	void CheckAttackCondition();
+	bool InAttackRange();
+	void Attack();
+	UPROPERTY(EditAnywhere)
+	float AttackSpeed;
 	class AAnimationCharacter* PlayerChar;
 
-	float RotateRange = 3000.f;
-	
+	FTimerHandle AttackTimer;
+
+	bool bIsAttacking;
+
+	FTimerHandle DestroyTimerHandle;
+	const TArray<AActor*> IgnoreActors;
+
+	void ChangeAnimation();
+
 };

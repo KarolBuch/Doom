@@ -24,9 +24,9 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 
-	void Shoot();
-
 	
+
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 	
 
 protected:
@@ -54,12 +54,19 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float RotateSpeed = 200.f;
 
+	UPROPERTY(EditDefaultsOnly)
+	float MaxHealth = 100;
+
+	UPROPERTY(EditDefaultsOnly)
+	float Health;
+
 	void Move(float Value);
 	void Turn(float Value);
 
 	void SideMove(float Value);
 	void LookRight(float Value);
 
+	void Shoot();
 
 	void StepCamera();
 

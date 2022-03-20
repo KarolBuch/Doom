@@ -29,7 +29,8 @@ void AAnimationCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	
+	Health = MaxHealth;
+
 	ShootGun = GetWorld()->SpawnActor<AShootGun>(GunClass);
 	
 	ShootGun->AttachToComponent(GetSprite(), FAttachmentTransformRules::KeepRelativeTransform);
@@ -41,7 +42,10 @@ void AAnimationCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	
+	if (Health <= 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("you died"));
+	}
 }
 
 void AAnimationCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -109,5 +113,15 @@ void AAnimationCharacter::StepCamera()
 	CameraComp->SetWorldLocation(NewLocation);
 }
 
+float AAnimationCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser)
+{
+	float DamageToApply = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	DamageToApply = FMath::Min(Health, DamageToApply);
 
+	Health -= DamageToApply;
+	UE_LOG(LogTemp, Warning, TEXT("Health left %f"), Health);
+
+	return DamageToApply;
+
+}
 

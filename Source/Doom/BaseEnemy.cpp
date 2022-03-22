@@ -29,9 +29,10 @@ void ABaseEnemy::Tick(float DeltaTime)
 	if (PlayerChar)
 	{
 		float Distance = FVector::Dist(GetActorLocation(), PlayerChar->GetActorLocation());
+		
 		if (Distance <= RotateRange)
 		{
-			RotateActor(PlayerChar->GetActorLocation());
+			//RotateActor(PlayerChar->GetActorLocation());
 		}
 
 	}
@@ -50,7 +51,7 @@ void ABaseEnemy::RotateActor(FVector LookAtTarget)
 
 
 
-	//Krêcenie siê wzglêdem rotacji gracza i potwora (jeszcze musze to wymyœliæ):)
+	//Krï¿½cenie siï¿½ wzglï¿½dem rotacji gracza i potwora (jeszcze musze to wymyï¿½liï¿½):)
 	/*if (LookAtRotation.Yaw > 10)
 	{
 		GetSprite()->SetFlipbook(Flipbooks.Walking);

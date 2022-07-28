@@ -4,42 +4,52 @@
 #include "BaseEnemyAIController.h"
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
+#include "BehaviorTree/BlackboardComponent.h"
 
 void ABaseEnemyAIController::BeginPlay()
 {
     Super::BeginPlay();
 
     APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
-    GetWorldTimerManager().SetTimer(TurnDelay, this, &ABaseEnemyAIController::TurnToPawn, 2.f, true, 0.f);
+   
     
-    //SetFocus(PlayerPawn);
+    if (AIBehavior != nullptr)
+    {
 
+        RunBehaviorTree(AIBehavior);
+        GetBlackboardComponent()->SetValueAsVector(TEXT("StartLocation"), GetPawn()->GetActorLocation());
+        
+    }
+    
 }
 
-
-void ABaseEnemyAIController::TurnToPawn()
+void ABaseEnemyAIController::Tick(float DeltaSeconds)
 {
     APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
 
-    
-    SetFocus(PlayerPawn);
+    float Distance = FVector::Dist(GetPawn()->GetActorLocation(), PlayerPawn->GetActorLocation());
+    //SetFocus(PlayerPawn);
+    UpdateControlRotation(0.1f);
+
+    LocationKeyId = GetBlackboardComponent()->GetKeyID("PatrolPathVector");
+
+    if (LineOfSightTo(PlayerPawn) && Distance < 3000.f)
+    {
+        MoveToActor(PlayerPawn, 50);
+        GetBlackboardComponent()->SetValueAsVector(TEXT("PlayerLocation"), PlayerPawn->GetActorLocation());
+        GetBlackboardComponent()->SetValueAsVector(TEXT("LastKnownPlayerLocation"), PlayerPawn->GetActorLocation());
+        
+    }
+   else
+    {
+     //ClearFocus(EAIFocusPriority::Gameplay);
+        GetBlackboardComponent()->ClearValue(TEXT("PlayerLocation"));
+
+    }
     
 
 }
 
-
-
-
-
-
-
-
-
-
-
-
- //GetWorldTimerManager().SetTimer(TurnDelay, this, &ABaseEnemyAIController::TurnToPawn, 5.f, true, 0.f);
-    //SetFocus(PlayerPawn);
 
  
 

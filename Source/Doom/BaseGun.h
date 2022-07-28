@@ -4,23 +4,20 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "ShootGun.generated.h"
+#include "BaseGun.generated.h"
 
-
-/*
-* 
-* UENUM(BlueprintType, Category = "Animation")
-enum class EAnimationDestructor : uint8
+UENUM(BlueprintType, Category = "Animation")
+enum class EAnimationCharacter : uint8
 {
 	Idle,
 	Walking,
 	Shot,
 	HideWeapon,
+	PullOutWeapon,
 };
-* 
-* 
-* USTRUCT(BlueprintType, Category = "Animation")
-struct FAnimationFlipbooks
+
+USTRUCT(BlueprintType, Category = "Animation")
+struct FAnimationCombatFlipbooks
 {
 	GENERATED_BODY()
 
@@ -32,34 +29,33 @@ struct FAnimationFlipbooks
 		class UPaperFlipbook* Shot{ nullptr };
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		class UPaperFlipbook* HideWeapon{ nullptr };
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		class UPaperFlipbook* PullOutWeapon{ nullptr };
+
 };
-*/
 
 UCLASS()
-class DOOM_API AShootGun : public AActor
+class DOOM_API ABaseGun : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	AShootGun();
+	ABaseGun();
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "AnimationDestructor")
+		EAnimationCharacter CurrentAnimationWeapon;
+
+	UPROPERTY(EditAnywhere, Category = "AnimationDestructor")
+		FAnimationCombatFlipbooks Flipbooks;
+
+	UPROPERTY(Category = "Components", VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		class UPaperFlipbookComponent* GunAnimation;
 
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
-
-	//UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "AnimationDestructor")
-	//EAnimationDestructor CurrentAnimationWeapon;
-
-	//UPROPERTY(EditAnywhere, Category = "AnimationDestructor")
-	//FAnimationFlipbooks Flipbooks;
-
-	UPROPERTY(Category = "Components", VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	class UPaperFlipbookComponent* GunAnimation;
-
-	
 
 public:	
 	// Called every frame
@@ -73,40 +69,58 @@ public:
 
 	void SetArrowLocation(FVector ShootPointLocation, FRotator ShotPointRotation);
 
+	void HideWeapon();
+
+	void PullOutWeapon();
+
 	bool bIsShoot;
 
 	bool bIsShootingMode;
 
-	
+	bool bIsPullingOut;
+
+	int GetMaxAmmo();
+
+	int GetMagazineAmmo();
+
+	void SetAmmo(int MaxAmmoValue, int MagazineAmmoValue);
+
 
 private:
 
 	UPROPERTY(VisibleAnywhere)
-	USceneComponent* Root;
+		USceneComponent* Root;
 
 	float ShootAnim = 0.165f;
 
 	FTimerHandle FireRateTimerHandle;
 
 	FTimerHandle ShootingModeTimer;
-	
+
+	FTimerHandle HidingWeaponTimer;
+	FTimerHandle PullingOutWeaponTimer;
+
 	UPROPERTY(EditAnywhere)
-	float MaxRange = 1000;
+		float MaxRange = 1000;
 	UPROPERTY(EditAnywhere)
-	int MaxAmmo = 120;
+		int MaxAmmo = 120;
 	UPROPERTY(EditAnywhere)
-	int MagazineAmmo;
+		int MagazineAmmo;
+	UPROPERTY(EditAnywhere)
+		float AttackDelay = 1.f;
+	UPROPERTY(EditAnywhere)
+		bool bIsInfiniteAmmo;
+
 
 	FVector LocationPoint;
 	FRotator RotationPoint;
 
 	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<class AShootImpact> ImpactClass;
+		TSubclassOf<class AShootImpact> ImpactClass;
 
 	UPROPERTY()
-	AShootImpact* ImpactEffect;
+		AShootImpact* ImpactEffect;
 
 	UPROPERTY(EditAnywhere)
-	float Damage = 10;
-
+		float Damage = 10;
 };

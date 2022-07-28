@@ -6,6 +6,8 @@
 #include "PaperCharacter.h"
 #include "BaseEnemy.generated.h"
 
+
+
 /**
  * 
  */
@@ -16,6 +18,7 @@ enum class EEnemyDestructor : uint8
 	Walking,
 	Shot,
 	HideWeapon,
+
 };
 USTRUCT(BlueprintType, Category = "Animation")
 struct FEnemyFlipbooks
@@ -32,6 +35,13 @@ struct FEnemyFlipbooks
 		class UPaperFlipbook* HideWeapon{ nullptr };
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		class UPaperFlipbook* Attack{ nullptr };
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		class UPaperFlipbook* LeftIdle{ nullptr };
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		class UPaperFlipbook* rightIdle{ nullptr };
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		class UPaperFlipbook* BackIdle{ nullptr };
+
 
 
 };
@@ -61,8 +71,9 @@ public:
 	AActor* Parent = GetOwner();
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+	UPROPERTY(EditAnywhere)
+	class APatrolPath* PatrolPath;
 
-	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -74,6 +85,10 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "AnimationDestructor")
 		FEnemyFlipbooks Flipbooks;
+
+
+
+	
 
 private:
 
@@ -91,13 +106,15 @@ private:
 	UPROPERTY(EditAnywhere)
 	float AttackSpeed;
 	class AAnimationCharacter* PlayerChar;
+	
+	bool bIsDead;
 
 	FTimerHandle AttackTimer;
 
 	bool bIsAttacking;
 
 	FTimerHandle DestroyTimerHandle;
-	const TArray<AActor*> IgnoreActors;
+
 
 	void ChangeAnimation();
 

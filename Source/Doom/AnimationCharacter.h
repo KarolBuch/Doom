@@ -6,7 +6,7 @@
 #include "PaperCharacter.h"
 #include "AnimationCharacter.generated.h"
 
-class AShootGun;
+class ABaseGun;
 /**
  * 
  */
@@ -47,6 +47,11 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trignometric Values")
 	FVector MaxMovementDisance;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
+	int WeaponIndex;
+
+
+
 private:
 	// Movement
 	UPROPERTY(EditAnywhere, Category = "Movement")
@@ -54,33 +59,46 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float RotateSpeed = 200.f;
 
+	void SideMove(float Value);
+	void LookRight(float Value);
+	void Move(float Value);
+	void Turn(float Value);
+	void StepCamera();
+	float RunningTime;
+
+	// Combat
 	UPROPERTY(EditDefaultsOnly)
 	float MaxHealth = 100;
 
 	UPROPERTY(EditDefaultsOnly)
 	float Health;
 
-	void Move(float Value);
-	void Turn(float Value);
-
-	void SideMove(float Value);
-	void LookRight(float Value);
+	int ShootGunAmmo;
+	int ShootGunMagazine;
 
 	void Shoot();
+	void ChangeWeapon();
+	void SetFists();
+	void SetShootgun();
+	void SetDoubleFistToCharacter();
+	void Reloading();
+	void SetShootGunToCharacter();
+	void RememberAmmo();
 
-	void StepCamera();
-
-
-	float RunningTime;
+	
 
 	bool bAnimation;
 
-
+	FTimerHandle DestroyTimer;
 	
 	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<AShootGun> GunClass;
+	TSubclassOf<ABaseGun> ShootGunClass;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<ABaseGun> DoubleFistClass;
+
 
 	UPROPERTY()
-	AShootGun* ShootGun;
+	ABaseGun* CurrentWeapon;
 
 };

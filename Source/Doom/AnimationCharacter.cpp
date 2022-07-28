@@ -9,7 +9,10 @@
 #include "Kismet/GameplayStatics.h"
 #include "Components/PrimitiveComponent.h"
 #include "GameFramework/PawnMovementComponent.h"
-#include "ShootGun.h"
+#include "BaseGun.h"
+#include "ShotGun.h"
+#include "DoubleFist.h"
+#include "TimerManager.h"
 
 AAnimationCharacter::AAnimationCharacter()
 {
@@ -22,7 +25,6 @@ AAnimationCharacter::AAnimationCharacter()
 	GetSprite()->SetupAttachment(CameraComp);
 	bIsMoving = false;
 	
-	
 }
 
 void AAnimationCharacter::BeginPlay()
@@ -31,10 +33,12 @@ void AAnimationCharacter::BeginPlay()
 	
 	Health = MaxHealth;
 
-	ShootGun = GetWorld()->SpawnActor<AShootGun>(GunClass);
 	
-	ShootGun->AttachToComponent(GetSprite(), FAttachmentTransformRules::KeepRelativeTransform);
-	ShootGun->SetOwner(this);
+	CurrentWeapon = GetWorld()->SpawnActor<AShotGun>(ShootGunClass);
+	
+	CurrentWeapon->AttachToComponent(GetSprite(), FAttachmentTransformRules::KeepRelativeTransform);
+	CurrentWeapon->SetOwner(this);
+	WeaponIndex = 1;
 
 }
 
@@ -42,10 +46,13 @@ void AAnimationCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+
 	if (Health <= 0)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("you died"));
 	}
+
+	CurrentWeapon->AttachToComponent(GetSprite(), FAttachmentTransformRules::KeepRelativeTransform);
 }
 
 void AAnimationCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -56,6 +63,9 @@ void AAnimationCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 	PlayerInputComponent->BindAxis(TEXT("Side"), this, &AAnimationCharacter::SideMove);
 	PlayerInputComponent->BindAxis(TEXT("LookRight"), this, &AAnimationCharacter::LookRight);
 	PlayerInputComponent->BindAction(TEXT("Shoot"), EInputEvent::IE_Pressed, this, &AAnimationCharacter::Shoot);
+	PlayerInputComponent->BindAction(TEXT("Reload"), EInputEvent::IE_Pressed, this, &AAnimationCharacter::Reloading);
+	PlayerInputComponent->BindAction(TEXT("PullOutFists"), EInputEvent::IE_Pressed, this, &AAnimationCharacter::SetFists);
+	PlayerInputComponent->BindAction(TEXT("PullOutShootGun"), EInputEvent::IE_Pressed, this, &AAnimationCharacter::SetShootgun);
 	
 }
 void AAnimationCharacter::Move(float Value)
@@ -70,7 +80,6 @@ void AAnimationCharacter::Move(float Value)
 	else
 	{
 		bIsMoving = false;
-
 	}	
 }
 void AAnimationCharacter::SideMove(float Value)
@@ -96,9 +105,15 @@ void AAnimationCharacter::LookRight(float Value)
 
 void  AAnimationCharacter::Shoot()
 {
-
-	ShootGun->SetArrowLocation(ArrowComp->GetComponentLocation(), ArrowComp->GetComponentRotation());
-	ShootGun->PullTriger();
+	if(!CurrentWeapon)
+	{
+		return;
+	}
+	
+	CurrentWeapon->SetArrowLocation(ArrowComp->GetComponentLocation(), ArrowComp->GetComponentRotation());
+	CurrentWeapon->PullTriger();
+	
+	
 }
 
 void AAnimationCharacter::StepCamera()
@@ -123,5 +138,89 @@ float AAnimationCharacter::TakeDamage(float DamageAmount, struct FDamageEvent co
 
 	return DamageToApply;
 
+}
+
+void AAnimationCharacter::Reloading()
+{
+
+	if (CurrentWeapon)
+	{
+	CurrentWeapon->Reload();
+	}
+	
+	CurrentWeapon->AttachToComponent(GetSprite(), FAttachmentTransformRules::KeepRelativeTransform);
+	CurrentWeapon->SetOwner(this);
+	
+}
+
+void AAnimationCharacter::ChangeWeapon()
+{
+
+	if (WeaponIndex == 0)
+	{
+	
+	CurrentWeapon->HideWeapon();
+	GetWorld()->GetTimerManager().SetTimer(DestroyTimer, this, &AAnimationCharacter::SetDoubleFistToCharacter, 0.6f, false);
+	UE_LOG(LogTemp, Warning, TEXT("ebe"));
+	}
+	if (WeaponIndex == 1)
+	{
+		CurrentWeapon->HideWeapon();
+		GetWorld()->GetTimerManager().SetTimer(DestroyTimer, this, &AAnimationCharacter::SetShootGunToCharacter, 0.6f, false);
+
+	}
+}
+void  AAnimationCharacter::SetDoubleFistToCharacter()
+{
+
+	CurrentWeapon = GetWorld()->SpawnActor<ADoubleFist>(DoubleFistClass);
+	CurrentWeapon->AttachToComponent(GetSprite(), FAttachmentTransformRules::KeepRelativeTransform);
+	CurrentWeapon->SetOwner(this);
+}
+
+void AAnimationCharacter::SetShootGunToCharacter()
+{
+
+	CurrentWeapon = GetWorld()->SpawnActor<AShotGun>(ShootGunClass);
+	CurrentWeapon->AttachToComponent(GetSprite(), FAttachmentTransformRules::KeepRelativeTransform);
+	CurrentWeapon->SetOwner(this);
+	CurrentWeapon->SetAmmo(ShootGunAmmo, ShootGunMagazine);
+
+	
+}
+void AAnimationCharacter::SetFists()
+{
+	
+	if (WeaponIndex != 0)
+	{
+	RememberAmmo();
+	WeaponIndex = 0;
+
+	ChangeWeapon();
+	}
+	
+
+}
+
+void AAnimationCharacter::SetShootgun()
+{
+	
+	if (WeaponIndex != 1)
+	{
+	RememberAmmo();
+	WeaponIndex = 1;
+	ChangeWeapon();
+	
+	}
+
+}
+
+void AAnimationCharacter::RememberAmmo()
+{
+	if (WeaponIndex == 1)
+	{
+		ShootGunAmmo = CurrentWeapon->GetMaxAmmo();
+		ShootGunMagazine = CurrentWeapon->GetMagazineAmmo();
+	}
 }
 

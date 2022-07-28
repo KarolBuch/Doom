@@ -14,7 +14,8 @@ class DOOM_API ABaseEnemyAIController : public AAIController
 {
 	GENERATED_BODY()
 	
-
+	public:
+	virtual void Tick(float DeltaSeconds) override;
 	protected:
 	virtual void BeginPlay() override;
 
@@ -22,5 +23,13 @@ class DOOM_API ABaseEnemyAIController : public AAIController
 
 	FTimerHandle TurnDelay;
 
-	void TurnToPawn();
+	UPROPERTY(EditAnywhere)
+	UBehaviorTree* AIBehavior;
+
+
+
+	uint8 EnemyKeyId;
+	uint8 LocationKeyId;
+	uint8 ContactKeyId;
+	
 };

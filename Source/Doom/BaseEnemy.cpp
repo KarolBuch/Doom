@@ -30,74 +30,103 @@ void ABaseEnemy::Tick(float DeltaTime)
 	{
 		float Distance = FVector::Dist(GetActorLocation(), PlayerChar->GetActorLocation());
 		
-		if (Distance <= RotateRange)
+
+		RotateActor(PlayerChar->GetActorLocation());
+		if (Distance >= RotateRange && Distance < 7000.f)
 		{
-			//RotateActor(PlayerChar->GetActorLocation());
+			RotateActor(PlayerChar->GetActorLocation());
 		}
+		else {
+			GetSprite()->SetRelativeRotation(FRotator(0.f, 90.f, 0.f));
 
+		}
+		
+		
+		
 	}
-
 	ChangeAnimation();
 }
 
 void ABaseEnemy::RotateActor(FVector LookAtTarget)
 {
 	FVector ToTarget = LookAtTarget - RootComponent->GetComponentLocation();
+	
 	FRotator LookAtRotation = FRotator(0.f, ToTarget.Rotation().Yaw, 0.f);
+	
+	
 	GetSprite()->SetRelativeRotation(LookAtRotation);
+/*
+if (LookAtRotation.Yaw > -135 && LookAtRotation.Yaw < -45)
+	{
+		GetSprite()->SetFlipbook(Flipbooks.Idle);
+		
+	}
+	else if (LookAtRotation.Yaw > -45 && LookAtRotation.Yaw < 45)
+	{
+		GetSprite()->SetFlipbook(Flipbooks.rightIdle);
+	}
+	else if (LookAtRotation.Yaw > 45 && LookAtRotation.Yaw < 135)
+	{
+		GetSprite()->SetFlipbook(Flipbooks.BackIdle);
+	}
+	else 
+	{
+		GetSprite()->SetFlipbook(Flipbooks.LeftIdle);
+	}
 
 
+	
+
+	UE_LOG(LogTemp, Warning, TEXT(" LookAtRotation = %f"), );
+	*/
 }
 
 
 
-	//Kr�cenie si� wzgl�dem rotacji gracza i potwora (jeszcze musze to wymy�li�):)
-	/*if (LookAtRotation.Yaw > 10)
-	{
-		GetSprite()->SetFlipbook(Flipbooks.Walking);
 
-	}
-	else if(LookAtRotation.Yaw > 90)
-	{
-		GetSprite()->SetFlipbook(Flipbooks.Idle);
-	}
-	else if (LookAtRotation.Yaw > 180)
-	{
-		GetSprite()->SetFlipbook(Flipbooks.Shot);
-	}
-	else
-	{
-		GetSprite()->SetFlipbook(Flipbooks.HideWeapon);
-	}*/
+
+	//Kr�cenie si� wzgl�dem rotacji gracza i potwora (jeszcze musze to wymy�li�):)
+
 	
 
 
 
 float  ABaseEnemy::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser)
 {
-	float DamageToApply = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
-	DamageToApply = FMath::Min(Health, DamageToApply);
-
-	Health -= DamageToApply;
-	UE_LOG(LogTemp, Warning, TEXT("Health left %f"), Health);
 	if (Health <= 0)
 	{
 		DeadAnimation();
+		bIsDead = true;
 	}
-	return DamageToApply;
+
+
+		float DamageToApply = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+		DamageToApply = FMath::Min(Health, DamageToApply);
+
+		Health -= DamageToApply;
+		UE_LOG(LogTemp, Warning, TEXT("Health left %f"), Health);
+
+		
+	
+	    return DamageToApply;
 
 }
 
 void ABaseEnemy::CheckAttackCondition()
 {
-	TArray<AActor*> IgnoredActors;
-	IgnoredActors.Add(this);
-
-	if (InAttackRange())
+	if (!bIsDead)
 	{
-		UGameplayStatics::ApplyRadialDamage(GetWorld(),20.f,GetActorLocation(),AttackRange, nullptr,IgnoredActors,this,nullptr,true);
+	TArray<AActor*> IgnoredActors;
+	
+	
+		IgnoredActors.Add(this);
 
+		if (InAttackRange())
+		{
+			UGameplayStatics::ApplyRadialDamage(GetWorld(),20.f,GetActorLocation(),AttackRange, nullptr,IgnoredActors,this,nullptr,true);
+		}
 	}
+	
 }
 
 bool ABaseEnemy::InAttackRange()
@@ -107,7 +136,7 @@ bool ABaseEnemy::InAttackRange()
 		float Distance = FVector::Dist(GetActorLocation(), PlayerChar->GetActorLocation());
 
 		if (Distance <= AttackRange)
-		{
+		{		
 			GetSprite()->SetFlipbook(Flipbooks.Attack);
 			return true;
 		}
@@ -119,19 +148,30 @@ bool ABaseEnemy::InAttackRange()
 
 void ABaseEnemy::ChangeAnimation()
 {
-	if (this->GetVelocity().X && this->GetVelocity().Y != 0 && !InAttackRange())
+	if (!bIsDead)
 	{
-		GetSprite()->SetFlipbook(Flipbooks.Walking);
+		if (this->GetVelocity().X && this->GetVelocity().Y != 0 && !InAttackRange())
+		{
+			GetSprite()->SetFlipbook(Flipbooks.Walking);
+		}
+		else if(!InAttackRange())
+		{
+			//GetSprite()->SetFlipbook(Flipbooks.Idle);
+		}
 	}
-	else if(!InAttackRange())
-	{
-		GetSprite()->SetFlipbook(Flipbooks.Idle);
-	}
+
+
+	
 }
 
 void ABaseEnemy::DeadAnimation()
 {
+
 	GetSprite()->SetFlipbook(Flipbooks.dying);
+	if (bIsDead)
+	{
+		return;
+	}
 
 	GetWorldTimerManager().SetTimer(DestroyTimerHandle,
 		[this]()

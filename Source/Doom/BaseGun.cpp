@@ -1,69 +1,73 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "ShootGun.h"
+#include "BaseGun.h"
 #include "PaperFlipbookComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
 #include "DrawDebugHelpers.h"
 #include "ShootImpact.h"
 
+
 // Sets default values
-AShootGun::AShootGun()
+ABaseGun::ABaseGun()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	
+
 	Root = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
 	SetRootComponent(Root);
 
 	GunAnimation = CreateDefaultSubobject<UPaperFlipbookComponent>(TEXT("AnimationComp"));
 	GunAnimation->SetupAttachment(RootComponent);
+
+	
 }
 
 // Called when the game starts or when spawned
-void AShootGun::BeginPlay()
+void ABaseGun::BeginPlay()
 {
 	Super::BeginPlay();
 
 	bIsShoot = false;
-
-	MagazineAmmo = 30;
+	bIsPullingOut = true;
+	PullOutWeapon();
 	
+	Reload();
 	
 }
 
 // Called every frame
-void AShootGun::Tick(float DeltaTime)
+void ABaseGun::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	
-	//ChangeAnimation();
+
+	ChangeAnimation();
 }
 
-void AShootGun::ChangeAnimation()
+void ABaseGun::ChangeAnimation()
 {
 
 	APawn* OwnerPawn = Cast<APawn>(GetOwner());
 	if (OwnerPawn == nullptr) return;
 	FVector OwnerVelocity = OwnerPawn->GetVelocity();
-	if (bIsShoot == false)
+	if (bIsShoot == false && !bIsPullingOut)
 	{
-	
+
 		if (OwnerVelocity.X && OwnerVelocity.Y != 0 && !bIsShootingMode)
 		{
-			//GunAnimation->SetFlipbook(Flipbooks.Walking);
+			GunAnimation->SetFlipbook(Flipbooks.Walking);
 		}
-		else if (OwnerVelocity.X == 0 || bIsShootingMode)
+		else if (OwnerVelocity.X == 0  || bIsShootingMode)
 		{
-			//GunAnimation->SetFlipbook(Flipbooks.Idle);
+			GunAnimation->SetFlipbook(Flipbooks.Idle);
 		}
 	}
-	
-	
+
+
 }
 
-void AShootGun::PullTriger()
+void ABaseGun::PullTriger()
 {
 
 	APawn* OwnerPawn = Cast<APawn>(GetOwner());
@@ -74,11 +78,11 @@ void AShootGun::PullTriger()
 	{
 		return;
 	}
-	
+
 
 	FVector End = LocationPoint + RotationPoint.Vector() * MaxRange;
 
-	if (MagazineAmmo <= 0)
+	if (MagazineAmmo <= 0 && !bIsInfiniteAmmo)
 	{
 		return;
 	}
@@ -90,70 +94,118 @@ void AShootGun::PullTriger()
 	{
 		FVector ShotDirection = -RotationPoint.Vector();
 		//DrawDebugPoint(GetWorld(), Hit.Location, 20, FColor::Cyan, true);
-		GetWorld()->SpawnActor<AShootImpact>(ImpactClass, Hit.Location, RotationPoint);		
+		GetWorld()->SpawnActor<AShootImpact>(ImpactClass, Hit.Location, RotationPoint);
 		FPointDamageEvent DamageEvent(Damage, Hit, ShotDirection, nullptr);
 		AActor* HitActor = Hit.GetActor();
-		if(HitActor != nullptr)
+		if (HitActor != nullptr)
 		{
 
 			HitActor->TakeDamage(Damage, DamageEvent, OwnerController, this);
 		}
-		
 
+		
 	}
 
 
 	//Animation when shooting
 	bIsShoot = true;
-	//GunAnimation->SetFlipbook(Flipbooks.Shot);
+	GunAnimation->SetFlipbook(Flipbooks.Shot);
 
 	GetWorldTimerManager().SetTimer(FireRateTimerHandle,
 		[this]()
 		{
-			//GunAnimation->SetFlipbook(Flipbooks.Idle);
+			GunAnimation->SetFlipbook(Flipbooks.Idle);
 			bIsShoot = false;
-			
+
 		},
 		0.25f, false);
-		bIsShootingMode = true;
+	bIsShootingMode = true;
 	GetWorldTimerManager().SetTimer(ShootingModeTimer,
 		[this]()
 		{
 
 			bIsShootingMode = false;
 		},
-		0.75f, false);
+		AttackDelay, false);
 
 
-	
+	UE_LOG(LogTemp, Warning, TEXT("masz tyle w magazynku %i i tyle ogolnie %i"), MagazineAmmo, MaxAmmo);
 }
 
-void AShootGun::SetArrowLocation(FVector ShootPointLocation, FRotator ShotPointRotation)
+void ABaseGun::SetArrowLocation(FVector ShootPointLocation, FRotator ShotPointRotation)
 {
 	LocationPoint = ShootPointLocation;
 	RotationPoint = ShotPointRotation;
 }
 
-void AShootGun::Reload()
+void ABaseGun::Reload()
 {
 	if (MaxAmmo <= 0)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("out of ammo!"));
 		return;
 	}
-	int SubstractAmaut = 0;
-	SubstractAmaut = 30 - MagazineAmmo;
+	int SubstractAmaunt = 0;
+	SubstractAmaunt = 30 - MagazineAmmo;
 
 	//UE_LOG(LogTemp, Warning, TEXT("ró¿nica: %i "),SubstractAmaut);
-	
-	if (SubstractAmaut > MaxAmmo)
-	{
-		SubstractAmaut = MaxAmmo;		
-	}	
-	MaxAmmo = MaxAmmo - SubstractAmaut;
 
-	MagazineAmmo += SubstractAmaut;
+	if (SubstractAmaunt > MaxAmmo)
+	{
+		SubstractAmaunt = MaxAmmo;
+	}
+	MaxAmmo = MaxAmmo - SubstractAmaunt;
+
+	MagazineAmmo += SubstractAmaunt;
+
 
 	//UE_LOG(LogTemp, Warning, TEXT("masz tyle w magazynku %i i tyle ogolnie %i"),MagazineAmmo, MaxAmmo);
 
+}
+
+void ABaseGun::HideWeapon()
+{
+	
+	GunAnimation->SetFlipbook(Flipbooks.HideWeapon);
+	bIsShoot = true;
+
+	GetWorldTimerManager().SetTimer(HidingWeaponTimer,
+		[this]()
+		{
+			
+			Destroy();
+	
+		},
+		0.6f,false);
+
+
+
+}
+
+void ABaseGun::PullOutWeapon()
+{
+	GunAnimation->SetFlipbook(Flipbooks.PullOutWeapon);
+	GetWorldTimerManager().SetTimer(HidingWeaponTimer,
+		[this]()
+		{
+			bIsPullingOut = false;
+
+		},
+		0.826f, false);
+}
+
+int ABaseGun::GetMaxAmmo()
+{
+	return MaxAmmo;
+}
+
+int ABaseGun::GetMagazineAmmo()
+{
+	return MagazineAmmo;
+}
+
+void ABaseGun::SetAmmo(int MaxAmmoValue, int MagazineAmmoValue)
+{
+	MaxAmmo = MaxAmmoValue;
+	MagazineAmmo = MagazineAmmoValue;
 }

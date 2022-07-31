@@ -7,12 +7,14 @@
 #include "Components/InputComponent.h"
 #include "Components/ArrowComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Components/CapsuleComponent.h"
 #include "Components/PrimitiveComponent.h"
 #include "GameFramework/PawnMovementComponent.h"
 #include "BaseGun.h"
 #include "ShotGun.h"
 #include "DoubleFist.h"
 #include "TimerManager.h"
+#include "DoomGameModeBase.h"
 
 AAnimationCharacter::AAnimationCharacter()
 {
@@ -46,11 +48,13 @@ void AAnimationCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-
-	if (Health <= 0)
+	if (IsDead())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("you died"));
+		//UE_LOG(LogTemp, Warning, TEXT("you died"))
+			return;
 	}
+	GetAmmo();
+
 
 	CurrentWeapon->AttachToComponent(GetSprite(), FAttachmentTransformRules::KeepRelativeTransform);
 }
@@ -90,7 +94,6 @@ void AAnimationCharacter::SideMove(float Value)
 	if (Value != 0 && bIsMoving == false)
 	{
 		StepCamera();
-		
 	}
 
 
@@ -136,6 +139,21 @@ float AAnimationCharacter::TakeDamage(float DamageAmount, struct FDamageEvent co
 	Health -= DamageToApply;
 	UE_LOG(LogTemp, Warning, TEXT("Health left %f"), Health);
 
+	if(IsDead())
+	{
+		ADoomGameModeBase* GameMode = GetWorld()->GetAuthGameMode<ADoomGameModeBase>();
+		if (GameMode != nullptr)
+		{
+			GameMode->PawnKilled(this);
+		}
+		CurrentWeapon->Destroy();
+		DetachFromControllerPendingDestroy();
+		//GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		
+	
+
+	}
+
 	return DamageToApply;
 
 }
@@ -160,7 +178,7 @@ void AAnimationCharacter::ChangeWeapon()
 	{
 	
 	CurrentWeapon->HideWeapon();
-	GetWorld()->GetTimerManager().SetTimer(DestroyTimer, this, &AAnimationCharacter::SetDoubleFistToCharacter, 0.6f, false);
+	GetWorld()->GetTimerManager().SetTimer(DestroyTimer, this, &AAnimationCharacter::SetDoubleFistToCharacter, 0.6, false);
 	UE_LOG(LogTemp, Warning, TEXT("ebe"));
 	}
 	if (WeaponIndex == 1)
@@ -182,9 +200,10 @@ void AAnimationCharacter::SetShootGunToCharacter()
 {
 
 	CurrentWeapon = GetWorld()->SpawnActor<AShotGun>(ShootGunClass);
+	CurrentWeapon->SetAmmo(ShootGunAmmo, ShootGunMagazine);
 	CurrentWeapon->AttachToComponent(GetSprite(), FAttachmentTransformRules::KeepRelativeTransform);
 	CurrentWeapon->SetOwner(this);
-	CurrentWeapon->SetAmmo(ShootGunAmmo, ShootGunMagazine);
+	
 
 	
 }
@@ -223,4 +242,39 @@ void AAnimationCharacter::RememberAmmo()
 		ShootGunMagazine = CurrentWeapon->GetMagazineAmmo();
 	}
 }
+bool AAnimationCharacter::IsDead() const
+{
+	return Health <= 0;
+}
+float AAnimationCharacter::GetHealth() const
+{
+	return Health;
+}
+float AAnimationCharacter::GetAmmo() const
+{
+		return CurrentWeapon->GetMagazineAmmo();
+}
+float AAnimationCharacter::GetMaxAmmo() const
+{
+		return CurrentWeapon->GetMaxAmmo();
+	
+}
+bool AAnimationCharacter::bIsFists() const
+{
+	if (WeaponIndex == 0)
+	{
+		return true;
+	}
+	return false;
+ }
 
+void AAnimationCharacter::GainHealth(float HealthValue)
+{
+	if (Health > 80 && Health != 100)
+	{
+		HealthValue = MaxHealth - Health;
+	}
+	UE_LOG(LogTemp, Warning, TEXT("tyle hp dodajesz %f"), HealthValue);
+	Health = Health + HealthValue;
+
+}

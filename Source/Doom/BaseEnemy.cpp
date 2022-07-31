@@ -5,6 +5,8 @@
 #include "AnimationCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "PaperFlipbookComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "DoomGameModeBase.h"
 //#include "DrawDebugHelpers.h"
 
 
@@ -31,7 +33,7 @@ void ABaseEnemy::Tick(float DeltaTime)
 		float Distance = FVector::Dist(GetActorLocation(), PlayerChar->GetActorLocation());
 		
 
-		RotateActor(PlayerChar->GetActorLocation());
+		
 		if (Distance >= RotateRange && Distance < 7000.f)
 		{
 			RotateActor(PlayerChar->GetActorLocation());
@@ -93,11 +95,7 @@ if (LookAtRotation.Yaw > -135 && LookAtRotation.Yaw < -45)
 
 float  ABaseEnemy::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser)
 {
-	if (Health <= 0)
-	{
-		DeadAnimation();
-		bIsDead = true;
-	}
+
 
 
 		float DamageToApply = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
@@ -106,8 +104,19 @@ float  ABaseEnemy::TakeDamage(float DamageAmount, struct FDamageEvent const& Dam
 		Health -= DamageToApply;
 		UE_LOG(LogTemp, Warning, TEXT("Health left %f"), Health);
 
-		
-	
+		if (IsDead())
+		{
+			//DetachFromControllerPendingDestroy();
+			GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			ADoomGameModeBase* GameMode = GetWorld()->GetAuthGameMode<ADoomGameModeBase>();
+			DeadAnimation();
+			bIsDead = true;
+			if (GameMode != nullptr)
+			{
+				GameMode->PawnKilled(this);
+			}
+		}
+
 	    return DamageToApply;
 
 }
@@ -180,5 +189,9 @@ void ABaseEnemy::DeadAnimation()
 			Destroy();
 		},
 		1.7f, false);
+}
+bool ABaseEnemy::IsDead() const
+{
+	return Health <= 0;
 }
 

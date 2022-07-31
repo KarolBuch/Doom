@@ -5,6 +5,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "BaseEnemy.h"
 
 void ABaseEnemyAIController::BeginPlay()
 {
@@ -26,28 +27,41 @@ void ABaseEnemyAIController::BeginPlay()
 void ABaseEnemyAIController::Tick(float DeltaSeconds)
 {
     APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
-
-    float Distance = FVector::Dist(GetPawn()->GetActorLocation(), PlayerPawn->GetActorLocation());
-    //SetFocus(PlayerPawn);
-    UpdateControlRotation(0.1f);
-
-    LocationKeyId = GetBlackboardComponent()->GetKeyID("PatrolPathVector");
-
-    if (LineOfSightTo(PlayerPawn) && Distance < 3000.f)
+    if (PlayerPawn)
     {
-        MoveToActor(PlayerPawn, 50);
-        GetBlackboardComponent()->SetValueAsVector(TEXT("PlayerLocation"), PlayerPawn->GetActorLocation());
-        GetBlackboardComponent()->SetValueAsVector(TEXT("LastKnownPlayerLocation"), PlayerPawn->GetActorLocation());
-        
-    }
-   else
-    {
-     //ClearFocus(EAIFocusPriority::Gameplay);
-        GetBlackboardComponent()->ClearValue(TEXT("PlayerLocation"));
+        float Distance = FVector::Dist(GetPawn()->GetActorLocation(), PlayerPawn->GetActorLocation());
+        //SetFocus(PlayerPawn);
+        UpdateControlRotation(0.1f);
 
+        LocationKeyId = GetBlackboardComponent()->GetKeyID("PatrolPathVector");
+
+        if (LineOfSightTo(PlayerPawn) && Distance < 3000.f)
+        {
+            MoveToActor(PlayerPawn, 50);
+            GetBlackboardComponent()->SetValueAsVector(TEXT("PlayerLocation"), PlayerPawn->GetActorLocation());
+            GetBlackboardComponent()->SetValueAsVector(TEXT("LastKnownPlayerLocation"), PlayerPawn->GetActorLocation());
+
+        }
+        else
+        {
+            //ClearFocus(EAIFocusPriority::Gameplay);
+            GetBlackboardComponent()->ClearValue(TEXT("PlayerLocation"));
+
+        }
     }
     
+    
 
+}
+bool ABaseEnemyAIController::IsDead() const
+{
+    ABaseEnemy* ControlledCharacter = Cast<ABaseEnemy>(GetPawn());
+    if (ControlledCharacter != nullptr)
+    {
+        return ControlledCharacter->IsDead();
+    }
+
+    return true;
 }
 
 

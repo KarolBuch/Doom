@@ -3,3 +3,7 @@
 
 #include "DoomGameModeBase.h"
 
+void ADoomGameModeBase::PawnKilled(APawn* PawnKilled)
+{
+
+}

@@ -28,6 +28,22 @@ public:
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 	
+	UFUNCTION(BlueprintPure)
+	bool IsDead() const;
+
+	UFUNCTION(BlueprintPure)
+	float GetHealth() const;
+	
+	UFUNCTION(BlueprintPure)
+	float GetAmmo() const;
+
+	UFUNCTION(BlueprintPure)
+	float GetMaxAmmo() const;
+
+	UFUNCTION(BlueprintPure)
+	bool bIsFists() const;
+
+	void GainHealth(float HealthValue);
 
 protected:
 
@@ -72,8 +88,9 @@ private:
 
 	UPROPERTY(EditDefaultsOnly)
 	float Health;
-
+	
 	int ShootGunAmmo;
+	
 	int ShootGunMagazine;
 
 	void Shoot();
@@ -84,7 +101,7 @@ private:
 	void Reloading();
 	void SetShootGunToCharacter();
 	void RememberAmmo();
-
+	
 	
 
 	bool bAnimation;

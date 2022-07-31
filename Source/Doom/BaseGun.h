@@ -85,7 +85,7 @@ public:
 
 	void SetAmmo(int MaxAmmoValue, int MagazineAmmoValue);
 
-
+	
 private:
 
 	UPROPERTY(VisibleAnywhere)

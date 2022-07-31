@@ -74,6 +74,8 @@ public:
 	UPROPERTY(EditAnywhere)
 	class APatrolPath* PatrolPath;
 
+	bool IsDead() const;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -103,6 +105,7 @@ private:
 	void CheckAttackCondition();
 	bool InAttackRange();
 	void Attack();
+	
 	UPROPERTY(EditAnywhere)
 	float AttackSpeed;
 	class AAnimationCharacter* PlayerChar;

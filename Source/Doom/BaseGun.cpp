@@ -88,7 +88,10 @@ void ABaseGun::PullTriger()
 	}
 	UE_LOG(LogTemp, Warning, TEXT("Ammo left %i"), MagazineAmmo);
 	FHitResult Hit;
-	MagazineAmmo--;
+	if (!bIsInfiniteAmmo)
+	{
+		MagazineAmmo--;
+	}
 	bool bSuccess = GetWorld()->LineTraceSingleByChannel(Hit, LocationPoint, End, ECollisionChannel::ECC_GameTraceChannel1);
 	if (bSuccess)
 	{
@@ -140,13 +143,19 @@ void ABaseGun::SetArrowLocation(FVector ShootPointLocation, FRotator ShotPointRo
 
 void ABaseGun::Reload()
 {
+	if (MagazineAmmo == 30)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("out of ammo!"));
+		return;
+		
+	}
 	if (MaxAmmo <= 0)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("out of ammo!"));
 		return;
 	}
 	int SubstractAmaunt = 0;
-	SubstractAmaunt = 30 - MagazineAmmo;
+	SubstractAmaunt = 2 - MagazineAmmo;
 
 	//UE_LOG(LogTemp, Warning, TEXT("ró¿nica: %i "),SubstractAmaut);
 
@@ -172,9 +181,7 @@ void ABaseGun::HideWeapon()
 	GetWorldTimerManager().SetTimer(HidingWeaponTimer,
 		[this]()
 		{
-			
 			Destroy();
-	
 		},
 		0.6f,false);
 

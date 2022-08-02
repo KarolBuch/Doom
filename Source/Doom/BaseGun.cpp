@@ -69,7 +69,7 @@ void ABaseGun::ChangeAnimation()
 
 void ABaseGun::PullTriger()
 {
-
+	
 	APawn* OwnerPawn = Cast<APawn>(GetOwner());
 	if (OwnerPawn == nullptr) return;
 	AController* OwnerController = OwnerPawn->GetController();
@@ -78,7 +78,7 @@ void ABaseGun::PullTriger()
 	{
 		return;
 	}
-
+	
 
 	FVector End = LocationPoint + RotationPoint.Vector() * MaxRange;
 
@@ -86,7 +86,8 @@ void ABaseGun::PullTriger()
 	{
 		return;
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Ammo left %i"), MagazineAmmo);
+
+	UGameplayStatics::SpawnSoundAttached(ShotGunSound, Root, TEXT("Root Component"));
 	FHitResult Hit;
 	if (!bIsInfiniteAmmo)
 	{
@@ -96,8 +97,11 @@ void ABaseGun::PullTriger()
 	if (bSuccess)
 	{
 		FVector ShotDirection = -RotationPoint.Vector();
-		//DrawDebugPoint(GetWorld(), Hit.Location, 20, FColor::Cyan, true);
+
 		GetWorld()->SpawnActor<AShootImpact>(ImpactClass, Hit.Location, RotationPoint);
+		UGameplayStatics::SpawnSoundAttached(TakePunchSound, Root, TEXT("Root Component"));
+		
+		
 		FPointDamageEvent DamageEvent(Damage, Hit, ShotDirection, nullptr);
 		AActor* HitActor = Hit.GetActor();
 		if (HitActor != nullptr)
@@ -143,7 +147,11 @@ void ABaseGun::SetArrowLocation(FVector ShootPointLocation, FRotator ShotPointRo
 
 void ABaseGun::Reload()
 {
-	if (MagazineAmmo == 30)
+	if (bIsShootingMode)
+	{
+		return;
+	}
+	if (MagazineAmmo == 2)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("out of ammo!"));
 		return;
@@ -156,7 +164,7 @@ void ABaseGun::Reload()
 	}
 	int SubstractAmaunt = 0;
 	SubstractAmaunt = 2 - MagazineAmmo;
-
+	UGameplayStatics::SpawnSoundAttached(ShotGunReloadSound, Root, TEXT("Root Component"));
 	//UE_LOG(LogTemp, Warning, TEXT("ró¿nica: %i "),SubstractAmaut);
 
 	if (SubstractAmaunt > MaxAmmo)

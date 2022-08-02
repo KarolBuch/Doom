@@ -118,4 +118,10 @@ private:
 	UPROPERTY()
 	ABaseGun* CurrentWeapon;
 
+	UPROPERTY(EditAnywhere)
+		USoundBase* TakeHitSound;
+	UPROPERTY(EditAnywhere)
+		USoundBase* GainHealthSound;
+
+
 };

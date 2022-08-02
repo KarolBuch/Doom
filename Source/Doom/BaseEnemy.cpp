@@ -27,7 +27,6 @@ void ABaseEnemy::BeginPlay()
 
 void ABaseEnemy::Tick(float DeltaTime)
 {
-	
 	if (PlayerChar)
 	{
 		float Distance = FVector::Dist(GetActorLocation(), PlayerChar->GetActorLocation());
@@ -42,7 +41,6 @@ void ABaseEnemy::Tick(float DeltaTime)
 			GetSprite()->SetRelativeRotation(FRotator(0.f, 90.f, 0.f));
 
 		}
-		
 		
 		
 	}
@@ -103,12 +101,14 @@ float  ABaseEnemy::TakeDamage(float DamageAmount, struct FDamageEvent const& Dam
 
 		Health -= DamageToApply;
 		UE_LOG(LogTemp, Warning, TEXT("Health left %f"), Health);
+		UGameplayStatics::SpawnSoundAttached(DemonGetAttack, RootComponent, TEXT("Root Component"));
 
 		if (IsDead())
 		{
 			//DetachFromControllerPendingDestroy();
 			GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 			ADoomGameModeBase* GameMode = GetWorld()->GetAuthGameMode<ADoomGameModeBase>();
+			UGameplayStatics::SpawnSoundAttached(DemonDeathSound, RootComponent, TEXT("Root Component"));
 			DeadAnimation();
 			bIsDead = true;
 			if (GameMode != nullptr)
@@ -123,6 +123,14 @@ float  ABaseEnemy::TakeDamage(float DamageAmount, struct FDamageEvent const& Dam
 
 void ABaseEnemy::CheckAttackCondition()
 {
+	if (PlayerChar)
+	{
+		if (PlayerChar->GetHealth() <= 0)
+		{
+			return;
+		}
+	}
+
 	if (!bIsDead)
 	{
 	TArray<AActor*> IgnoredActors;
@@ -133,6 +141,7 @@ void ABaseEnemy::CheckAttackCondition()
 		if (InAttackRange())
 		{
 			UGameplayStatics::ApplyRadialDamage(GetWorld(),20.f,GetActorLocation(),AttackRange, nullptr,IgnoredActors,this,nullptr,true);
+			UGameplayStatics::SpawnSoundAttached(DemonAttackSound, RootComponent, TEXT("Root Component"));
 		}
 	}
 	
@@ -140,16 +149,14 @@ void ABaseEnemy::CheckAttackCondition()
 
 bool ABaseEnemy::InAttackRange()
 {
-	if (PlayerChar)
-	{
+
 		float Distance = FVector::Dist(GetActorLocation(), PlayerChar->GetActorLocation());
 
-		if (Distance <= AttackRange)
-		{		
-			GetSprite()->SetFlipbook(Flipbooks.Attack);
-			return true;
-		}
-	}
+			if (Distance <= AttackRange)
+			{
+				GetSprite()->SetFlipbook(Flipbooks.Attack);
+				return true;
+			}
 
 	return false;
 }
@@ -192,6 +199,6 @@ void ABaseEnemy::DeadAnimation()
 }
 bool ABaseEnemy::IsDead() const
 {
+	
 	return Health <= 0;
 }
-

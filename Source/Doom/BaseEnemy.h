@@ -95,7 +95,7 @@ protected:
 private:
 
 	//Combat
-	float RotateRange = 3000.f;
+	float RotateRange = 2000.f;
 	float AttackRange = 280.f;
 	UPROPERTY(EditDefaultsOnly)
 	float MaxHealth = 100;
@@ -104,7 +104,7 @@ private:
 	void DeadAnimation();
 	void CheckAttackCondition();
 	bool InAttackRange();
-	void Attack();
+	
 	
 	UPROPERTY(EditAnywhere)
 	float AttackSpeed;
@@ -114,11 +114,22 @@ private:
 
 	FTimerHandle AttackTimer;
 
+	
+
 	bool bIsAttacking;
 
 	FTimerHandle DestroyTimerHandle;
 
 
 	void ChangeAnimation();
+
+	UPROPERTY(EditAnywhere)
+		USoundBase* DemonAttackSound;
+	UPROPERTY(EditAnywhere)
+		USoundBase* DemonSpotSound;
+	UPROPERTY(EditAnywhere)
+		USoundBase* DemonDeathSound;
+	UPROPERTY(EditAnywhere)
+		USoundBase* DemonGetAttack;
 
 };

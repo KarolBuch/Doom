@@ -22,10 +22,17 @@ class DOOM_API ABaseEnemyAIController : public AAIController
 
 	private:
 
+	void DemonScream();
+
 	FTimerHandle TurnDelay;
+
+	FTimerHandle TalkingDemon;
 
 	UPROPERTY(EditAnywhere)
 	UBehaviorTree* AIBehavior;
+
+	UPROPERTY(EditAnywhere)
+		USoundBase* DemonSpotSound;
 
 
 

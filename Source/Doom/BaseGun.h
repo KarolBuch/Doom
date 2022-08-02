@@ -122,5 +122,14 @@ private:
 		AShootImpact* ImpactEffect;
 
 	UPROPERTY(EditAnywhere)
+		USoundBase* ShotGunSound;
+
+	UPROPERTY(EditAnywhere)
+		USoundBase* ShotGunReloadSound;
+
+	UPROPERTY(EditAnywhere)
+		USoundBase* TakePunchSound;
+
+	UPROPERTY(EditAnywhere)
 		float Damage = 10;
 };

@@ -19,14 +19,17 @@ void ABaseEnemyAIController::BeginPlay()
 
         RunBehaviorTree(AIBehavior);
         GetBlackboardComponent()->SetValueAsVector(TEXT("StartLocation"), GetPawn()->GetActorLocation());
-        
     }
+    GetWorldTimerManager().SetTimer(TalkingDemon,this, &ABaseEnemyAIController::DemonScream, 5.f, true, 0.f);
     
 }
 
 void ABaseEnemyAIController::Tick(float DeltaSeconds)
 {
+
+    ABaseEnemy* ControlledCharacter = Cast<ABaseEnemy>(GetPawn());
     APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
+   
     if (PlayerPawn)
     {
         float Distance = FVector::Dist(GetPawn()->GetActorLocation(), PlayerPawn->GetActorLocation());
@@ -35,11 +38,12 @@ void ABaseEnemyAIController::Tick(float DeltaSeconds)
 
         LocationKeyId = GetBlackboardComponent()->GetKeyID("PatrolPathVector");
 
-        if (LineOfSightTo(PlayerPawn) && Distance < 3000.f)
+        if (LineOfSightTo(PlayerPawn) && Distance < 2000.f)
         {
-            MoveToActor(PlayerPawn, 50);
+            MoveToActor(PlayerPawn, 50); 
             GetBlackboardComponent()->SetValueAsVector(TEXT("PlayerLocation"), PlayerPawn->GetActorLocation());
             GetBlackboardComponent()->SetValueAsVector(TEXT("LastKnownPlayerLocation"), PlayerPawn->GetActorLocation());
+
 
         }
         else
@@ -63,7 +67,21 @@ bool ABaseEnemyAIController::IsDead() const
 
     return true;
 }
+void ABaseEnemyAIController::DemonScream()
+{
+    APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
+    if(!PlayerPawn)
+    {
+        return;
+    }
 
+    float Distance = FVector::Dist(GetPawn()->GetActorLocation(), PlayerPawn->GetActorLocation());
+    if (LineOfSightTo(PlayerPawn) && Distance < 3000.f)
+    {
+        UGameplayStatics::SpawnSoundAttached(DemonSpotSound, RootComponent, TEXT("Root Component"));
+    }
+
+}
 
  
 

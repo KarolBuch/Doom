@@ -7,6 +7,7 @@
 #include "BaseEnemy.h"
 #include "PatrolPath.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "BehaviorTree/Blackboard/BlackboardKeyType_Vector.h"
 
 
 UBTTask_PatrollTask::UBTTask_PatrollTask(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -33,11 +34,15 @@ EBTNodeResult::Type UBTTask_PatrollTask::ExecuteTask(UBehaviorTreeComponent& Own
 	APatrolPath* PathRef = Cast<APatrolPath>(Chr->PatrolPath);
 	if (!PathRef || PathRef->Locations.Num() < 1)
 	{
-		return EBTNodeResult::Failed;
+		return EBTNodeResult::Succeeded;
 	}
 	//SetValueAsVector(TEXT("PlayerLocation"), PlayerPawn->GetActorLocation());
-	OwnerComp.GetBlackboardComponent()->SetValueAsVector("PatrolPathVector", PathRef->Locations[Index]);
+	OwnerComp.GetBlackboardComponent()->SetValue<UBlackboardKeyType_Vector>("PatrolPathVector", PathRef->Locations[Index]);
 
+	if (PathRef->Locations.Num() < 0)
+	{
+		return EBTNodeResult::Failed;
+	}
 	if (Index < PathRef->Locations.Num() - 1)
 	{
 		Index++;

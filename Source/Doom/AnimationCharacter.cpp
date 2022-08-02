@@ -137,6 +137,7 @@ float AAnimationCharacter::TakeDamage(float DamageAmount, struct FDamageEvent co
 	DamageToApply = FMath::Min(Health, DamageToApply);
 
 	Health -= DamageToApply;
+	UGameplayStatics::SpawnSoundAttached(TakeHitSound, RootComponent, TEXT("Root Component"));
 	UE_LOG(LogTemp, Warning, TEXT("Health left %f"), Health);
 
 	if(IsDead())
@@ -276,5 +277,6 @@ void AAnimationCharacter::GainHealth(float HealthValue)
 	}
 	UE_LOG(LogTemp, Warning, TEXT("tyle hp dodajesz %f"), HealthValue);
 	Health = Health + HealthValue;
+	UGameplayStatics::SpawnSoundAttached(GainHealthSound,RootComponent, TEXT("Root Component"));
 
 }
